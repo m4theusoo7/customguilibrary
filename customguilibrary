@@ -1,0 +1,224 @@
+--[[
+    Infinite Hub - Custom GUI Library
+    Tabs + Toggles baseados nas funções do script "infinite hub" (Blox Fruits)
+
+    Abas: FARM, ESTILOS, BOSSES, RACE, HAKI, SEA, RAIDS
+    Cada toggle aplica a flag correspondente em _G (ex.: _G.AutoFarm, _G.Auto_Saber, etc.)
+]]
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "InfiniteHubGUI"
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.fromOffset(660, 780)
+mainFrame.Position = UDim2.fromOffset(120, 40)
+mainFrame.BackgroundColor3 = Color3.fromRGB(13, 13, 13)
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.fromRGB(70, 70, 70)
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+local titleBar = Instance.new("Frame", mainFrame)
+titleBar.Name = "TitleBar"
+titleBar.Size = UDim2.new(1, 0, 0, 40)
+titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel", titleBar)
+titleLabel.Name = "Title"
+titleLabel.Size = UDim2.new(1, -60, 1, 0)
+titleLabel.Position = UDim2.fromOffset(10, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "infinite hub"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = titleBar
+
+local closeButton = Instance.new("TextButton", titleBar)
+closeButton.Name = "Close"
+closeButton.Size = UDim2.fromOffset(30, 30)
+closeButton.Position = UDim2.fromOffset(625, 5)
+closeButton.Text = "X"
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = titleBar
+closeButton.MouseButton1Click:Connect(function()
+    gui.Enabled = false
+end)
+
+local tabContainer = Instance.new("Frame", mainFrame)
+tabContainer.Name = "TabContainer"
+tabContainer.Position = UDim2.fromOffset(0, 40)
+tabContainer.Size = UDim2.new(1, 0, 1, -40)
+tabContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+tabContainer.BorderSizePixel = 0
+tabContainer.Parent = mainFrame
+
+local tabsData = {
+    { name = "FARM", toggles = {
+        { "AutoFarm", "Auto Farm Level" },
+        { "Farmfast", "Auto Farm Fast" },
+        { "AutoFarmFruitMastery", "Auto Farm Fruit Mastery" },
+        { "AutoFarmGunMastery", "Auto Farm Gun Mastery" },
+        { "AutoFarmChest", "Auto Farm Chest" },
+        { "AutoFarmMob", "Auto Farm Mob" },
+        { "AutoFarmNearest", "Auto Farm Nearest" },
+        { "AutoFarmBoss", "Auto Farm Boss" },
+        { "AutoFarmBounty", "Auto Farm Bounty" },
+        { "AutoFarmSeabaest", "Auto Farm Seabeast" },
+    }},
+    { name = "ESTILOS", toggles = {
+        { "Auto_Saber", "Saber" },
+        { "AutoDarkDagger", "Dark Dagger" },
+        { "AutoDeathStep", "Death Step" },
+        { "AutoSharkman", "Sharkman Karate" },
+        { "AutoElectricClaw", "Electric Claw" },
+        { "AutoDragonTalon", "Dragon Talon" },
+        { "Auto_God_Human", "God Human" },
+        { "AutoSuperhuman", "Superhuman" },
+        { "AutoBartilo", "Bartilo" },
+    }},
+    { name = "BOSSES", toggles = {
+        { "AutoAllBoss", "Auto All Boss" },
+        { "AutoEliteHunter", "Elite Hunter" },
+        { "AutoFactory", "Factory" },
+        { "AutoDungeon", "Dungeon" },
+        { "AutoDungeonMobAura", "Dungeon Mob Aura" },
+    }},
+    { name = "RACE", toggles = {
+        { "AutoRace", "Auto Race" },
+        { "Auto_QuestRace", "Auto Quest Race" },
+        { "Auto_EvoRace", "Auto Evo Race" },
+        { "Auto_Awakener", "Auto Awakener" },
+    }},
+    { name = "HAKI", toggles = {
+        { "AUTOHAKI", "AUTOHAKI" },
+        { "AutoObservation", "Auto Observation" },
+        { "AutoObservationHakiV2", "Auto Observation Haki V2" },
+        { "Auto_Rainbow_Haki", "Auto Rainbow Haki" },
+    }},
+    { name = "SEA", toggles = {
+        { "AutoSeaBest", "Auto Sea Best" },
+        { "Hopfindmoon", "Hop Moon" },
+        { "Hopfinddao", "Hop Dao" },
+    }},
+    { name = "RAIDS", toggles = {
+        { "AutoRaidPirate", "Auto Raid Pirate" },
+        { "Auto_StartRaid", "Auto Start Raid" },
+        { "AutoLawRaid", "Auto Law Raid" },
+        { "Auto_KillLaw", "Auto Kill Law" },
+        { "Auto_Start_Law_Dungeon", "Auto Start Law Dungeon" },
+    }},
+}
+
+local tabButtons = {}
+local tabContents = {}
+
+local function selectTab(name, contentFrame, btn)
+    for tabName, b in pairs(tabButtons) do
+        b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        b.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+    for tabName, cf in pairs(tabContents) do
+        cf.Visible = (tabName == name)
+    end
+    btn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+end
+
+local function addToggle(parent, flagName, labelText, yOffset)
+    local row = Instance.new("Frame", parent)
+    row.Name = "Toggle_" .. flagName
+    row.Size = UDim2.new(1, -20, 0, 34)
+    row.Position = UDim2.fromOffset(10, yOffset)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel = 0
+    row.Parent = parent
+
+    local label = Instance.new("TextLabel", row)
+    label.Name = "Label"
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.Position = UDim2.fromOffset(0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 16
+    label.Parent = row
+
+    local btn = Instance.new("TextButton", row)
+    btn.Name = "ToggleButton"
+    btn.Size = UDim2.fromOffset(50, 24)
+    btn.Position = UDim2.fromOffset(0, 5)
+    btn.Text = "OFF"
+    btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    btn.Parent = row
+
+    btn.MouseButton1Click:Connect(function()
+        local newVal = not rawget(_G, flagName)
+        rawset(_G, flagName, newVal)
+        btn.Text = newVal and "ON" or "OFF"
+        btn.BackgroundColor3 = newVal and Color3.fromRGB(60, 170, 90) or Color3.fromRGB(60, 60, 60)
+    end)
+
+    return btn
+end
+
+local function createTab(tabData)
+    local btn = Instance.new("TextButton", tabContainer)
+    btn.Name = "Tab_" .. tabData.name
+    btn.Size = UDim2.fromOffset(90, 30)
+    btn.Position = UDim2.fromOffset((#tabButtons - 1) * 95, 0)
+    btn.Text = tabData.name
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Parent = tabContainer
+    tabButtons[tabData.name] = btn
+
+    local content = Instance.new("Frame", tabContainer)
+    content.Name = "Content_" .. tabData.name
+    content.Size = UDim2.fromOffset(0, 0)
+    content.Position = UDim2.fromOffset(0, 40)
+    content.BackgroundTransparency = 1
+    content.Visible = (tabData.name == "FARM")
+    content.Parent = tabContainer
+    tabContents[tabData.name] = content
+
+    local yOffset = 0
+    for _, t in ipairs(tabData.toggles) do
+        addToggle(content, t[1], t[2], yOffset)
+        yOffset = yOffset + 38
+    end
+
+    btn.MouseButton1Click:Connect(function()
+        selectTab(tabData.name, content, btn)
+    end)
+
+    return content
+end
+
+for _, tabData in ipairs(tabsData) do
+    createTab(tabData)
+end
+
+selectTab("FARM", tabContents["FARM"], tabButtons["FARM"])
+
+return {
+    Library = "InfiniteHubGUI",
+    gui = gui,
+}
